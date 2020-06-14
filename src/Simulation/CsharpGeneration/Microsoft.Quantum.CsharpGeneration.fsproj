@@ -1,4 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Automatically import a QDK-dev.props file if it exists in a parent folder. -->
+  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), QDK-dev.props))\QDK-dev.props" 
+    Condition=" '$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), QDK-dev.props))' != '' " />
+
   <Import Project="..\Common\AssemblyCommon.props" />
   <Import Project="..\Common\DebugSymbols.props" />
   
@@ -27,4 +31,8 @@
   <ItemGroup>
     <ProjectReference Include="..\RoslynWrapper\Microsoft.Quantum.RoslynWrapper.fsproj" />
   </ItemGroup>
+
+  <!-- Automatically import a QDK-dev.targets file if it exists in a parent folder. -->
+  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), QDK-dev.targets))\QDK-dev.targets" 
+    Condition=" '$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), QDK-dev.targets))' != '' " />
 </Project>
