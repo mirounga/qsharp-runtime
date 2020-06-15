@@ -20,7 +20,7 @@
     <tags>Quantum Q# Qsharp </tags>
 
     <dependencies>
-      <dependency id="Microsoft.Quantum.Simulators" version="0.11.2006.1304-beta" />
+      <dependency id="Microsoft.Quantum.Simulators" version="0.11.2006.1514-beta" />
     </dependencies>
   </metadata>
 
