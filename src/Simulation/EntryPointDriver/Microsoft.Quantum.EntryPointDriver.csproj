@@ -4,6 +4,7 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
+    <PlatformTarget>x64</PlatformTarget>
     <Nullable>enable</Nullable>
     <PackageId>Microsoft.Quantum.EntryPointDriver</PackageId>
     <Description>The standard command-line interface for standalone Q# console applications.</Description>
