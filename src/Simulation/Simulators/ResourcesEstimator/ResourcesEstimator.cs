@@ -94,13 +94,13 @@ namespace Microsoft.Quantum.Simulation.Simulators
         /// <para>
         /// The table looks like this:
         /// <pre>
-        ///  -------------------------
-        ///  | Metric        | Sum   |
-        ///  -------------------------
-        ///  | QubitsCount   | 100   |
-        ///  | T             | 10000 |
+        ///  ---------------------------------
+        ///  | Metric        | Sum   | Max   |
+        ///  ---------------------------------
+        ///  | QubitsCount   | 100   | 100   |
+        ///  | T             | 10000 | 10000 |
         ///  ...
-        ///  -------------------------
+        ///  ---------------------------------
         /// </pre>
         /// </para>
         /// </summary>
@@ -121,7 +121,6 @@ namespace Microsoft.Quantum.Simulation.Simulators
                     if (l is ICallGraphStatistics collector)
                     {
                         var results = collector.Results.ToTable();
-                        //Debug.Assert(results.rows.Count() == 1);
                         Debug.Assert(results.keyColumnNames.Length > 2 && results.keyColumnNames[2] == "Caller");
 
                         var roots = results.rows.Where(r => r.KeyRow[2] == CallGraphEdge.CallGraphRootHashed);
