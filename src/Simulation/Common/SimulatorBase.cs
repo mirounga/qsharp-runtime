@@ -39,9 +39,9 @@ namespace Microsoft.Quantum.Simulation.Common
         public event Action<ICallable, IApplyData>? OnOperationStart = null;
         public event Action<ICallable, IApplyData>? OnOperationEnd = null;
         public event Action<System.Runtime.ExceptionServices.ExceptionDispatchInfo>? OnFail = null;
-        public event Action<long>? OnAllocateQubits = null;
+        public event Action<IQArray<Qubit>>? OnAllocateQubits = null;
         public event Action<IQArray<Qubit>>? OnReleaseQubits = null;
-        public event Action<long>? OnBorrowQubits = null;
+        public event Action<IQArray<Qubit>>? OnBorrowQubits = null;
         public event Action<IQArray<Qubit>>? OnReturnQubits = null;
         public event Action<string>? OnLog = null;
         public event Action<Exception, IEnumerable<StackFrame>>? OnException = null;
@@ -282,8 +282,8 @@ namespace Microsoft.Quantum.Simulation.Common
         /// </summary>
         public class Allocate : Intrinsic.Allocate
         {
-            private SimulatorBase sim;
-            private IQubitManager? manager;
+            protected readonly SimulatorBase sim;
+            protected readonly IQubitManager manager;
 
             public Allocate(SimulatorBase m) : base(m)
             {
@@ -293,26 +293,16 @@ namespace Microsoft.Quantum.Simulation.Common
 
             public override Qubit Apply()
             {
-                sim.OnAllocateQubits?.Invoke(1);
-                return manager.Allocate();
+                Qubit qubit = manager.Allocate();
+                sim.OnAllocateQubits?.Invoke(new QArray<Qubit>(qubit));
+                return qubit;
             }
 
             public override IQArray<Qubit> Apply(long count)
             {
-                if (count < 0)
-                {
-                    throw new InvalidOperationException($"Trying to allocate {count} qubits.");
-                }
-                else if (count == 0)
-                {
-                    sim.OnAllocateQubits?.Invoke(count);
-                    return new QArray<Qubit>();
-                }
-                else
-                {
-                    sim.OnAllocateQubits?.Invoke(count);
-                    return manager.Allocate(count);
-                }
+                IQArray<Qubit> qubits = manager.Allocate(count);
+                sim.OnAllocateQubits?.Invoke(qubits);
+                return qubits;
             }
         }
 
@@ -322,8 +312,8 @@ namespace Microsoft.Quantum.Simulation.Common
         /// </summary>
         public class Release : Intrinsic.Release
         {
-            private SimulatorBase sim;
-            private IQubitManager manager;
+            protected readonly SimulatorBase sim;
+            protected readonly IQubitManager manager;
 
             public Release(SimulatorBase m) : base(m)
             {
@@ -350,22 +340,27 @@ namespace Microsoft.Quantum.Simulation.Common
         /// </summary>
         public class Borrow : Intrinsic.Borrow
         {
-            SimulatorBase sim;
+            protected readonly SimulatorBase sim;
+            protected readonly IQubitManager manager;
 
             public Borrow(SimulatorBase m) : base(m)
             {
-                sim = m;
+                this.sim = m;
+                this.manager = m.QubitManager;
             }
 
             public override Qubit Apply()
             {
-                return sim.QubitManager.Allocate();
+                Qubit qubit = manager.Borrow();
+                sim.OnBorrowQubits?.Invoke(new QArray<Qubit>(qubit));
+                return qubit;
             }
 
             public override IQArray<Qubit> Apply(long count)
             {
-                sim.OnBorrowQubits?.Invoke(count);
-                return sim.QubitManager.Borrow(count);
+                IQArray<Qubit> qubits = manager.Borrow(count);
+                sim.OnBorrowQubits?.Invoke(qubits);
+                return qubits;
             }
         }
 
@@ -375,36 +370,73 @@ namespace Microsoft.Quantum.Simulation.Common
         /// </summary>
         public class Return : Intrinsic.Return
         {
-            SimulatorBase sim;
+            protected readonly SimulatorBase sim;
+            protected readonly IQubitManager manager;
 
             public Return(SimulatorBase m) : base(m)
             {
-                sim = m;
+                this.sim = m;
+                this.manager = m.QubitManager;
             }
 
             public override void Apply(Qubit q)
             {
                 sim.OnReturnQubits?.Invoke(new QArray<Qubit>(new[] { q }));
-                sim.QubitManager.Return(q);
+                manager.Return(q);
             }
 
             public override void Apply(IQArray<Qubit> qubits)
             {
                 sim.OnReturnQubits?.Invoke(qubits);
-                sim.QubitManager.Return(qubits);
+                manager.Return(qubits);
             }
         }
+
+        /// <summary>
+        /// Implements the GetQubitsAvailableToUse extension function.
+        /// </summary>
+        public class GetQubitsAvailableToUse : Environment.GetQubitsAvailableToUse
+        {
+            protected readonly SimulatorBase sim;
+            protected readonly IQubitManager manager;
+
+            public GetQubitsAvailableToUse(SimulatorBase m) : base(m)
+            {
+                this.sim = m;
+                this.manager = m.QubitManager;
+            }
+
+            public override Func<QVoid, long> __Body__ => (arg) => 
+                manager.GetFreeQubitsCount();
+        }
+
+        /// <summary>
+        /// Implements the GetQubitsAvailableToBorrow extension function.
+        /// </summary>
+        public class GetQubitsAvailableToBorrow : Environment.GetQubitsAvailableToBorrow
+        {
+            protected readonly SimulatorBase sim;
+            protected readonly IQubitManager manager;
+
+            public GetQubitsAvailableToBorrow(SimulatorBase m) : base(m)
+            {
+                this.sim = m;
+                this.manager = m.QubitManager;
+            }
+
+            public override Func<QVoid, long> __Body__ => (arg) => 
+                manager.GetQubitsAvailableToBorrowCount(1);
+        }
+
 
         /// <summary>
         ///     Implements the Log statement as an operation. It just calls Console.WriteLine.
         /// </summary>
         public class Message : Intrinsic.Message
         {
-            private SimulatorBase sim;
-            public Message(SimulatorBase m) : base(m)
-            {
+            protected readonly SimulatorBase sim;
+            public Message(SimulatorBase m) : base(m) => 
                 sim = m;
-            }
 
             public override Func<String, QVoid> __Body__ => (msg) =>
             {
@@ -414,47 +446,14 @@ namespace Microsoft.Quantum.Simulation.Common
         }
 
         /// <summary>
-        /// Implements the GetQubitsAvailableToUse extension function.
-        /// </summary>
-        public class GetQubitsAvailableToUse : Environment.GetQubitsAvailableToUse
-        {
-            private SimulatorBase sim;
-
-            public GetQubitsAvailableToUse(SimulatorBase m) : base(m)
-            {
-                sim = m;
-            }
-
-            public override Func<QVoid, long> __Body__ => (arg) => sim.QubitManager.GetFreeQubitsCount();
-        }
-
-        /// <summary>
-        /// Implements the GetQubitsAvailableToBorrow extension function.
-        /// </summary>
-        public class GetQubitsAvailableToBorrow : Environment.GetQubitsAvailableToBorrow
-        {
-            private SimulatorBase sim;
-
-            public GetQubitsAvailableToBorrow(SimulatorBase m) : base(m)
-            {
-                sim = m;
-            }
-
-            public override Func<QVoid, long> __Body__ => (arg) => sim.QubitManager.GetQubitsAvailableToBorrowCount(1);
-        }
-
-        /// <summary>
         ///     Implements the DrawRandomInt operation from the
         ///     Microsoft.Quantum.Random namespace.
         /// </summary>
         public class DrawRandomInt : Random.DrawRandomInt
         {
-            private SimulatorBase sim;
-
-            public DrawRandomInt(SimulatorBase m) : base(m)
-            {
+            protected readonly SimulatorBase sim;
+            public DrawRandomInt(SimulatorBase m) : base(m) =>
                 sim = m;
-            }
 
             public override Func<(long, long), long> __Body__ => arg =>
             {
@@ -473,12 +472,9 @@ namespace Microsoft.Quantum.Simulation.Common
         /// </summary>
         public class DrawRandomDouble : Random.DrawRandomDouble
         {
-            private SimulatorBase sim;
-
-            public DrawRandomDouble(SimulatorBase m) : base(m)
-            {
+            protected readonly SimulatorBase sim;
+            public DrawRandomDouble(SimulatorBase m) : base(m) =>
                 sim = m;
-            }
 
             public override Func<(double, double), double> __Body__ => arg =>
             {

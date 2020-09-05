@@ -3,7 +3,6 @@
 
 using System;
 using Microsoft.Quantum.Simulation.Core;
-using System.Diagnostics;
 
 namespace Microsoft.Quantum.Simulation.Common
 {
@@ -181,35 +180,23 @@ namespace Microsoft.Quantum.Simulation.Common
 
         public virtual long StartConditionalStatement(IQArray<Result> measurementResults, IQArray<Result> resultsValues)
         {
-            if (measurementResults == null) { return 1; };
-            if (resultsValues == null) { return 1; };
-            Debug.Assert(measurementResults.Count == resultsValues.Count);
-            if (measurementResults.Count != resultsValues.Count) { return 1; };
-
-            int equal = 1;
+            if (measurementResults == null) { return resultsValues == null ? 1 : 0; };
+            if (measurementResults.Count != resultsValues?.Count) { return 0; };
 
             for (int i = 0; i < measurementResults.Count; i++)
             {
                 if (measurementResults[i] != resultsValues[i])
                 {
-                    equal = 0;
+                    return 0;
                 }
             }
 
-            return equal;
+            return 1;
         }
 
         public virtual long StartConditionalStatement(Result measurementResult, Result resultValue)
         {
-
-            if (measurementResult == resultValue)
-            {
-                return 1;
-            } 
-            else
-            {
-                return 0;
-            }
+            return measurementResult == resultValue ? 1 : 0;
         }
 
         public virtual bool RunThenClause(long statement)
@@ -234,7 +221,6 @@ namespace Microsoft.Quantum.Simulation.Common
 
         public virtual void EndConditionalStatement(long id)
         {
-
         }
 
         public virtual void Assert(IQArray<Pauli> bases, IQArray<Qubit> qubits, Result result, string msg)
