@@ -40,9 +40,9 @@ namespace Microsoft.Quantum.Simulation.Common
         public event Action<ICallable, IApplyData>? OnOperationStart = null;
         public event Action<ICallable, IApplyData>? OnOperationEnd = null;
         public event Action<System.Runtime.ExceptionServices.ExceptionDispatchInfo>? OnFail = null;
-        public event Action<IQArray<Qubit>>? OnAllocateQubits = null;
+        public event Action<long>? OnAllocateQubits = null;
         public event Action<IQArray<Qubit>>? OnReleaseQubits = null;
-        public event Action<IQArray<Qubit>>? OnBorrowQubits = null;
+        public event Action<long>? OnBorrowQubits = null;
         public event Action<IQArray<Qubit>>? OnReturnQubits = null;
         public event Action<string>? OnLog = null;
         public event Action<Exception, IEnumerable<StackFrame>>? OnException = null;
@@ -295,14 +295,14 @@ namespace Microsoft.Quantum.Simulation.Common
             public override Qubit Apply()
             {
                 Qubit qubit = manager.Allocate();
-                sim.OnAllocateQubits?.Invoke(new QArray<Qubit>(qubit));
+                sim.OnAllocateQubits?.Invoke(1);
                 return qubit;
             }
 
             public override IQArray<Qubit> Apply(long count)
             {
                 IQArray<Qubit> qubits = manager.Allocate(count);
-                sim.OnAllocateQubits?.Invoke(qubits);
+                sim.OnAllocateQubits?.Invoke(count);
                 return qubits;
             }
         }
@@ -353,14 +353,14 @@ namespace Microsoft.Quantum.Simulation.Common
             public override Qubit Apply()
             {
                 Qubit qubit = manager.Borrow();
-                sim.OnBorrowQubits?.Invoke(new QArray<Qubit>(qubit));
+                sim.OnBorrowQubits?.Invoke(1);
                 return qubit;
             }
 
             public override IQArray<Qubit> Apply(long count)
             {
                 IQArray<Qubit> qubits = manager.Borrow(count);
-                sim.OnBorrowQubits?.Invoke(qubits);
+                sim.OnBorrowQubits?.Invoke(count);
                 return qubits;
             }
         }
