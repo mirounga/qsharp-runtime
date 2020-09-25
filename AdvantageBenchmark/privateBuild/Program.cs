@@ -17,7 +17,7 @@ namespace quantum
             if (envDep == null || envDep.Length == 0) envDep = "99";
 
             int tstMin  = 0;
-            int tstMax  = 3;
+            int tstMax  = 4;
             int loopCnt = 10;
 
             if (args.Length > 0) tstMin  = Convert.ToInt32(args[0]);
@@ -44,15 +44,19 @@ namespace quantum
                                 gates   = Dummy.Run(sim).Result; 
                                 tstName = "Dummy";
                                 break;
-                            case 1: 
+                            case 1:
+                                gates = ModularAddProductLETest.Run(sim).Result;
+                                tstName = "ModAddProd";
+                                break;
+                            case 2: 
                                 gates = Advantage44.Run(sim).Result; 
                                 tstName = "4x4";
                                 break;
-                            case 2: 
+                            case 3: 
                                 gates = Advantage55.Run(sim).Result; 
                                 tstName = "5x5";
                                 break;
-                            case 3: 
+                            case 4: 
                                 gates = Advantage56.Run(sim).Result; 
                                 tstName = "5x6";
                                 break;
