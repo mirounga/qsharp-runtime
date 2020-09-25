@@ -10,11 +10,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\QuantumLibraries\Numerics\src\Numerics.csproj" />
+    <ProjectReference Include="..\..\..\QuantumLibraries\Standard\src\Standard.csproj" />
     <ProjectReference Include="..\..\src\Simulation\CsharpGeneration\Microsoft.Quantum.CsharpGeneration.fsproj" PrivateAssets="All" IsQscReference="true" />
   </ItemGroup>
   
-  <ItemGroup>
+  
+  <!-- <ItemGroup>
     <PackageReference Include="Microsoft.Quantum.Numerics" Version="0.12.2009112969-beta"  />
-    <PackageReference Include="Microsoft.Quantum.Runtime.Core" Version="0.12.2009112969-beta" />
-  </ItemGroup>
+  </ItemGroup> -->
 </Project>
