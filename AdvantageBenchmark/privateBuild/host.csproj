@@ -6,6 +6,10 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <IncludeQsharpCorePackages>false</IncludeQsharpCorePackages> <!-- otherwise the standard library is included by the Sdk -->
+    <CsharpGeneration>false</CsharpGeneration>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Simulation\CsharpGeneration\Microsoft.Quantum.CsharpGeneration.fsproj" PrivateAssets="All" IsQscReference="true" />
+  </ItemGroup>
 </Project>
