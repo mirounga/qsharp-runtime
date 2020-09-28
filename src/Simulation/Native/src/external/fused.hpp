@@ -232,7 +232,9 @@ class Fused
                 if (wfnCapacity < 1u << 12)       nMaxThrds = 1;
                 else if (wfnCapacity < 1u << 16)  nMaxThrds = 2;
                 else if (wfnCapacity < 1u << 20)  nMaxThrds = 3;
-                //printf("@@@DBG: Set nMaxThrds=%d\n", nMaxThrds);
+#ifdef DBWDBG
+                printf("@@@DBG: Restricting threads to: %d\n", nMaxThrds);
+#endif
                 omp_set_num_threads(nMaxThrds);
             }
 
