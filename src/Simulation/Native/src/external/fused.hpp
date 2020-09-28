@@ -2,13 +2,9 @@
 
 #pragma once
 
-#define DBWDBG
-
 #include "config.hpp"
 #include "external/fusion.hpp"
 #include "simulator/kernels.hpp"
-#include <string>
-#include <thread>
 
 #ifndef HAVE_INTRINSICS
 #include "external/nointrin/kernels.hpp"
@@ -24,21 +20,21 @@
 #endif
 #endif
 
-#ifdef DBWDBG // Used for reporting timings
 #include <chrono>
-#endif
-
 namespace Microsoft
 {
 namespace Quantum
 {
+    extern int dbgFusedSpan;
+    extern int dbgFusedLimit;
+    extern int dbgNumThreads;
+    extern int dbgReorder;
 
 namespace SIMULATOR
 {
-
 class Fused
   {
-#ifdef DBWDBG // Debugging statistics reported out
+    //@@@DBG: Everything in here is added for debugging
     mutable int dbgNfused;
     mutable int dbgSize;
     mutable int dbgNqs;
@@ -48,11 +44,9 @@ class Fused
     mutable double dbgET1;
     mutable double dbgET2;
     mutable std::chrono::system_clock::time_point prev  = std::chrono::system_clock::now();
-#endif
 
   public:
       Fused() {
-#ifdef DBWDBG // Init stats
         dbgNfused   = 0;
         dbgSize     = 0;
         dbgNqs      = 0;
@@ -61,11 +55,10 @@ class Fused
         dbgElapsed  = 0.0;
         dbgET1      = 0.0;
         dbgET2      = 0.0;
-#endif
 
-        wfnCapacity     = 0u;   // used to optimize runtime parameters
-        maxFusedSpan    = 4;    // determine span to use at runtime
-        maxFusedDepth   = 999;  // determine max depth to use at runtime
+        wfnCapacity     = 0u; //@@@DBG used to optimize parameters
+        maxFusedSpan    =-1;
+        maxFusedDepth   = 99;
     }
 
     inline void reset()
@@ -73,22 +66,15 @@ class Fused
       fusedgates = Fusion();
     }
 
-    const Fusion& get_fusedgates() const {
+    Fusion getFusedGates() const {
         return fusedgates;
     }
     
-    void set_fusedgates(Fusion newFusedGates) const {
-        fusedgates = newFusedGates;
+    void setFusedGates(Fusion newFG) const {
+        fusedgates = newFG;
     }
 
-    const int maxSpan() const {
-        return maxFusedSpan;
-    }
-
-    const int maxDepth() const {
-        return maxFusedDepth;
-    }
-
+    
     template <class T, class A>
     void flush(std::vector<T, A>& wfn) const
     {
@@ -97,31 +83,23 @@ class Fused
       
       Fusion::Matrix m;
       Fusion::IndexVector qs, cs;
-
-#ifdef DBWDBG // Timing
+      
       std::chrono::system_clock::time_point dbgT1 = std::chrono::system_clock::now();
-#endif
-
       fusedgates.perform_fusion(m, qs, cs);
-
-#ifdef DBWDBG // Timing
       std::chrono::system_clock::time_point dbgT2 = std::chrono::system_clock::now();
       std::chrono::duration<double> dbgE = dbgT2 - dbgT1;
       dbgET1 += dbgE.count();
-#endif
 
       std::size_t cmask = 0;
       for (auto c : cs)
         cmask |= (1ull << c);
       
-#ifdef DBWDBG // Gather stats
       dbgNfused++;
       dbgSize += fusedgates.size();
       dbgNqs += fusedgates.num_qubits();
       dbgNcs += fusedgates.num_controls();
-      dbgT1 = std::chrono::system_clock::now();
-#endif
 
+      dbgT1 = std::chrono::system_clock::now();
       switch (qs.size())
       {
         case 1:
@@ -147,20 +125,17 @@ class Fused
             break;
       }
 
-#ifdef DBWDBG // More timing stats
       dbgT2 = std::chrono::system_clock::now();
       dbgE = dbgT2 - dbgT1;
       dbgET2 += dbgE.count();
-#endif
 
       fusedgates = Fusion();
 
-#ifdef DBWDBG // Report out periodically
       std::chrono::system_clock::time_point curr = std::chrono::system_clock::now();
       std::chrono::duration<double> elapsed = curr - prev;
       dbgElapsed = elapsed.count();
       double timeInt = log((float)wfn.capacity()) / log(2.0);
-      timeInt = (timeInt * timeInt) / 40.0;
+      timeInt = (timeInt * timeInt) / 20.0;
 
       if (dbgElapsed >= timeInt) { 
             double nFused = (float)dbgNfused;
@@ -180,12 +155,21 @@ class Fused
           prev      = curr;
           dbgNgates = 0;
       }
-#endif
 
     }
     
+    template <class T, class A1, class A2>
+    bool subsytemwavefunction(std::vector<T, A1>& wfn,
+                              std::vector<unsigned> const& qs,
+                              std::vector<T, A2>& qubitswfn,
+                              double tolerance)
+    {
+      flush(wfn); // we have to flush before we can extract the state
+      return kernels::subsytemwavefunction(wfn, qs, qubitswfn, tolerance);
+    }
+    
     template <class M>
-    Fusion::Matrix convertMatrix(M const& m) const
+    Fusion::Matrix convertMatrix(M const& m)
     {
       Fusion::Matrix mat(2, Fusion::Matrix::value_type(2));
       for (unsigned i = 0; i < 2; ++i)
@@ -195,28 +179,26 @@ class Fused
     }
     
     template <class T, class A, class M>
-    void apply_controlled(std::vector<T, A>& wfn, M const& mat, std::vector<unsigned> const& cs, unsigned q) const
+    void apply_controlled(std::vector<T, A>& wfn, M const& mat, std::vector<unsigned> const& cs, unsigned q)
     {
-#ifdef DBWDBG // Gather gate count stats
         dbgNgates++;
-#endif
-        Fusion::IndexVector qs = std::vector<unsigned>(1, q);
+        Fusion::IndexVector qs      = std::vector<unsigned>(1, q);
         fusedgates.insert(convertMatrix(mat), qs, cs);
     }
 
     template <class T, class A, class M>
-    void apply(std::vector<T, A>& wfn, M const& mat, unsigned q) const
+    void apply(std::vector<T, A>& wfn, M const& mat, unsigned q)
     {
       std::vector<unsigned> cs;
       apply_controlled(wfn, mat, cs, q);
     }
 
-    template <class T, class A>
-    bool shouldFlush(std::vector<T, A>& wfn, std::vector<unsigned> const& cs, unsigned q)
+    template <class T, class A, class M>
+    bool shouldFlush(std::vector<T, A>& wfn, M const& mat, std::vector<unsigned> const& cs, unsigned q)
     {
         // Major runtime logic change here
 
-          // Have to update capacity as the WFN grows
+      // Have to update capacity as the WFN grows
         if (wfnCapacity != wfn.capacity()) {
             wfnCapacity = wfn.capacity();
             char* envNT = NULL;
@@ -236,56 +218,29 @@ class Fused
                 omp_set_num_threads(nMaxThrds);
             }
 
-            // Set the max fused depth
-            char* envFD = NULL;
-            maxFusedDepth = 999;
-#ifdef _MSC_VER
-            err = _dupenv_s(&envFD, &len, "QDK_SIM_FUSEDEPTH");
-            if (envFD != NULL && len > 0) {
-                maxFusedDepth = atoi(envFD);
-        }
-#else
-            envFD = getenv("QDK_SIM_FUSEDEPTH");
-            if (envFD != NULL && strlen(envFD) > 0) {
-                maxFusedDepth = atoi(envFD);
-            }
-#endif
-            // Set the fused span limit
-            char* envFS = NULL;
-            maxFusedSpan = 4;                               // General sweet spot
-            if (wfnCapacity < 1u << 20) maxFusedSpan = 2;   // Don't pre-fuse small problems
-#ifdef _MSC_VER
-            err = _dupenv_s(&envFS, &len, "QDK_SIM_FUSESPAN");
-            if (envFS != NULL && len > 0) {
-                maxFusedSpan = atoi(envFS);
-                if (maxFusedSpan > 7) maxFusedSpan = 7;     // Highest we can handle
-        }
-#else
-            envFS = getenv("QDK_SIM_FUSESPAN");
-            if (envFS != NULL && strlen(envFS) > 0) {
-                maxFusedSpan = atoi(envFS);
-            }
-#endif
+            // This is now pretty much unlimited, could be set in the future
+            maxFusedDepth = dbgFusedLimit;
+            if (maxFusedDepth < 0) maxFusedDepth = 99;
 
-#ifdef DBWDBG // Set fusion depth and span limits
-            maxFusedDepth = 999;
-            maxFusedSpan = 4;
+            maxFusedSpan = dbgFusedSpan;
+            if (maxFusedSpan < 0) {
+                // Default for large problems (optimized with benchmarks)
+                maxFusedSpan = 3;
+                // Reduce size for small problems (optimized with benchmarks)
+                if (wfnCapacity < 1ul << 20) maxFusedSpan = 2;
+            }
             printf("@@@DBG: OMP_NUM_THREADS=%d fusedSpan=%d fusedDepth=%d wfnCapacity=%u\n", omp_get_max_threads(), maxFusedSpan, maxFusedDepth, (unsigned)wfnCapacity);
-#endif
         }
-
-#ifdef DBWDBG // Only really predict if we're in debugging mode
+        // New rules of when to stop fusing
         Fusion::IndexVector qs = std::vector<unsigned>(1, q);
+
         return (fusedgates.predict(qs, cs) > maxFusedSpan || fusedgates.size() >= (unsigned)maxFusedDepth);
-#else
-        return false;
-#endif
     }
 
   private:
     mutable Fusion fusedgates;
-
-    //: New runtime optimizatin settings
+    
+    // New runtime optimization settings
     mutable size_t wfnCapacity;
     mutable int    maxFusedSpan;
     mutable int    maxFusedDepth;
