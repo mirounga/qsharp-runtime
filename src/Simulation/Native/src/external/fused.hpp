@@ -229,10 +229,9 @@ class Fused
             if (envNT == NULL) { // If the user didn't force the number of threads, make an intelligent guess
                 int nMaxThrds = std::thread::hardware_concurrency();        // Logical HW threads
                 if (nMaxThrds > 4) nMaxThrds/= 2;                           // Assume we have hyperthreading (no consistent/concise way to do this)
-                if (wfnCapacity < 1u << 20) {
-                    if (nMaxThrds > 8) nMaxThrds = 8;                       // Small problem, never use too many
-                    else if (nMaxThrds > 3) nMaxThrds = 3;                  // Small problem on a small machine
-                }
+                if (wfnCapacity < 1u << 12)       nMaxThrds = 1;
+                else if (wfnCapacity < 1u << 16)  nMaxThrds = 2;
+                else if (wfnCapacity < 1u << 20)  nMaxThrds = 3;
                 //printf("@@@DBG: Set nMaxThrds=%d\n", nMaxThrds);
                 omp_set_num_threads(nMaxThrds);
             }

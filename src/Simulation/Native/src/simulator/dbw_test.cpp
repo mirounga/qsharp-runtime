@@ -177,8 +177,8 @@ int main()
     char                    fName[30];
 
     // Perform a small number of loops on the 4x4 advantage circuit.
-    int sizR = 4;
-    int sizC = 4;
+    int sizR = 5;
+    int sizC = 5;
     int loops = 10;
     mySprintf(fName, sizeof(fName), "advantage_%d%d_4.log", sizR, sizC);
 
