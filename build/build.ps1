@@ -18,6 +18,20 @@ if ($Env:ENABLE_NATIVE -ne "false") {
     Write-Host "Skipping native. ENABLE_NATIVE variable set to: $Env:ENABLE_NATIVE."
 }
 
+Write-Host "##[info]Build QIR Runtime"
+$qirRuntimeBuild = (Join-Path $PSScriptRoot "../src/QirRuntime/build.py")
+if (-not (Test-Path Env:AGENT_OS) -or ($Env:AGENT_OS.StartsWith("Win"))) {
+    python $qirRuntimeBuild $Env:BUILD_CONFIGURATION
+} else {
+    python3 $qirRuntimeBuild $Env:BUILD_CONFIGURATION
+}
+
+
+if ($LastExitCode -ne 0) {
+    Write-Host "##vso[task.logissue type=error;]Failed to build QIR Runtime."
+    $script:all_ok = $False
+}
+
 function Build-One {
     param(
         [string]$action,
