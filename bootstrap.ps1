@@ -17,9 +17,10 @@ if ($Env:ENABLE_NATIVE -ne "false") {
         choco install llvm
         choco install ninja
     } else {
-        #brew install llvm # llvm should be already installed
+        brew install llvm
         brew install ninja
     }
+    refreshenv
 } else {
     Write-Host "Skipping installing prerequisites for native because ENABLE_NATIVE variable set to: $Env:ENABLE_NATIVE."
 }
