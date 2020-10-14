@@ -14,9 +14,21 @@ if ($Env:ENABLE_NATIVE -ne "false") {
         $script:all_ok = $False
     }
     popd
+
+    Write-Host "##[info]Test QIR Runtime"
+    $qirRuntimeBuild = (Join-Path $PSScriptRoot "../src/QirRuntime/build")
+    $qirRuntimeBuild = (Join-Path $qirRuntimeBuild $Env:BUILD_CONFIGURATION)
+    pushd ($qirRuntimeBuild)
+    ctest --verbose
+    if ($LastExitCode -ne 0) {
+        Write-Host "##vso[task.logissue type=error;]Failed to test QIR Runtime"
+        $script:all_ok = $False
+    }
+    popd
 } else {
-    Write-Host "Skipping native. ENABLE_NATIVE variable set to: $Env:ENABLE_NATIVE."
+    Write-Host "Skipping native components. ENABLE_NATIVE variable set to: $Env:ENABLE_NATIVE."
 }
+
 
 function Test-One {
     Param($project)

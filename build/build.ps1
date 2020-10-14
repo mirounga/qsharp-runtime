@@ -8,14 +8,42 @@ $all_ok = $True
 
 if ($Env:ENABLE_NATIVE -ne "false") {
     Write-Host "##[info]Build Native simulator"
-    $nativeBuild = (Join-Path $PSScriptRoot "../src/Simulation/Native/build") 
+    $nativeBuild = (Join-Path $PSScriptRoot "../src/Simulation/Native/build")
     cmake --build $nativeBuild --config $Env:BUILD_CONFIGURATION
     if ($LastExitCode -ne 0) {
         Write-Host "##vso[task.logissue type=error;]Failed to build Native simulator."
         $script:all_ok = $False
     }
+
+    Write-Host "##[info]Build QIR Runtime"
+    $oldCC = $env:CC
+    $oldCXX = $env:CC
+    if (-not (Test-Path Env:AGENT_OS) -or ($Env:AGENT_OS.StartsWith("Win"))) {
+        $env:CC = "clang.exe"
+        $env:CXX = "clang++.exe"
+    } else {
+        $env:CC = "/usr/bin/clang"
+        $env:CXX = "/usr/bin/clang++"
+    }
+    $qirRuntimeBuildFolder = (Join-Path $PSScriptRoot "../src/QirRuntime/build")
+    mkdir $qirRuntimeBuildFolder
+    $qirRuntimeBuildFolder = (Join-Path $qirRuntimeBuildFolder $Env:BUILD_CONFIGURATION)
+    mkdir $qirRuntimeBuildFolder
+    pushd $qirRuntimeBuildFolder
+
+    cmake -G Ninja -DCMAKE_BUILD_TYPE= $Env:BUILD_CONFIGURATION ../..
+    cmake --build .
+
+    $env:CC = $oldCC
+    $env:CXX = $oldCXX
+    popd
+
+    if ($LastExitCode -ne 0) {
+        Write-Host "##vso[task.logissue type=error;]Failed to build QIR Runtime."
+        $script:all_ok = $False
+    }
 } else {
-    Write-Host "Skipping native. ENABLE_NATIVE variable set to: $Env:ENABLE_NATIVE."
+    Write-Host "Skipping native because ENABLE_NATIVE variable is set to: $Env:ENABLE_NATIVE."
 }
 
 function Build-One {
