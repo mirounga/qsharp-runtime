@@ -8,22 +8,29 @@ $all_ok = $True
 
 if ($Env:ENABLE_NATIVE -ne "false") {
     Write-Host "##[info]Build Native simulator"
-    $nativeBuild = (Join-Path $PSScriptRoot "../src/Simulation/Native/build") 
+    $nativeBuild = (Join-Path $PSScriptRoot "../src/Simulation/Native/build")
     cmake --build $nativeBuild --config $Env:BUILD_CONFIGURATION
     if ($LastExitCode -ne 0) {
         Write-Host "##vso[task.logissue type=error;]Failed to build Native simulator."
         $script:all_ok = $False
     }
+
+    Write-Host "##[info]Build QIR Runtime"
+    $fso = new-object -ComObject scripting.filesystemobject
+    $qirRuntimeBuildFolder = (Join-Path $PSScriptRoot "../src/QirRuntime/build")
+    $fso.CreateFolder($qirRuntimeBuildFolder)
+    $qirRuntimeBuildFolder = (Join-Path $qirRuntimeBuildFolder $Env:BUILD_CONFIGURATION)
+    $fso.CreateFolder($qirRuntimeBuildFolder)
+    pushd $qirRuntimeBuildFolder
+    cmake -G Ninja -DCMAKE_BUILD_TYPE=$Env:BUILD_CONFIGURATION ../..
+    cmake --build .
+    popd
+    if ($LastExitCode -ne 0) {
+        Write-Host "##vso[task.logissue type=error;]Failed to build QIR Runtime."
+        $script:all_ok = $False
+    }
 } else {
     Write-Host "Skipping native. ENABLE_NATIVE variable set to: $Env:ENABLE_NATIVE."
-}
-
-Write-Host "##[info]Build QIR Runtime"
-$qirRuntimeBuild = (Join-Path $PSScriptRoot "../src/QirRuntime/build.py")
-if (-not (Test-Path Env:AGENT_OS) -or ($Env:AGENT_OS.StartsWith("Win"))) {
-    python $qirRuntimeBuild $Env:BUILD_CONFIGURATION
-} else {
-    python3 $qirRuntimeBuild $Env:BUILD_CONFIGURATION
 }
 
 
