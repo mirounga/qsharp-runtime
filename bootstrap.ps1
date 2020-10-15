@@ -17,6 +17,10 @@ if ($Env:ENABLE_NATIVE -ne "false") {
         choco install llvm
         choco install ninja
         refreshenv
+
+        Write-Host $Env:PATH # still doesn't contain LLVM in it, even after refreshenv...
+        $Env:PATH = $Env:PATH + ";C:\Program Files\LLVM\bin"
+        Write-Host $Env:PATH
     } else {
         #brew install llvm # this seems to mess up native simulator build, probably because of STD libs
         brew install ninja
