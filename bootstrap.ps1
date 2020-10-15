@@ -11,6 +11,24 @@ Push-Location (Join-Path $PSScriptRoot "src/Simulation/Simulators")
     .\FindNuspecReferences.ps1
 Pop-Location
 
+# install prereqs for native builds
+if ($Env:ENABLE_NATIVE -ne "false") {
+    if (-not (Test-Path Env:AGENT_OS) -or ($Env:AGENT_OS.StartsWith("Win"))) {
+        choco install llvm
+        choco install ninja
+        refreshenv
+
+        Write-Host $Env:PATH # still doesn't contain LLVM in it, even after refreshenv...
+        $Env:PATH = $Env:PATH + ";C:\Program Files\LLVM\bin"
+        Write-Host $Env:PATH
+    } else {
+        #brew install llvm # this seems to mess up native simulator build, probably because of STD libs
+        brew install ninja
+    }
+} else {
+    Write-Host "Skipping installing prerequisites for native because ENABLE_NATIVE variable set to: $Env:ENABLE_NATIVE."
+}
+
 # bootstrap native folder
 if ($Env:ENABLE_NATIVE -ne "false") {
     ## Run the right script based on the OS.
