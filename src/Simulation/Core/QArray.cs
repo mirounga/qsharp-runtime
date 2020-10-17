@@ -6,7 +6,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Reflection;
 using Newtonsoft.Json;
 
 namespace Microsoft.Quantum.Simulation.Core
@@ -106,7 +105,7 @@ namespace Microsoft.Quantum.Simulation.Core
                 storage = new List<T>((int)capacity);
                 for (var i = 0L; i < capacity; ++i)
                 {
-                    storage.Add(CreateDefault());
+                    storage.Add(Default.OfType<T>());
                 }
             }
 
@@ -150,8 +149,7 @@ namespace Microsoft.Quantum.Simulation.Core
                 long oldLength = storage.Count;
                 for (int i = 0; i < (newLength - oldLength); i++)
                 {
-                    T obj = CreateDefault();
-                    storage.Add(obj);
+                    storage.Add(Default.OfType<T>());
                 }
             }
         }
@@ -173,25 +171,6 @@ namespace Microsoft.Quantum.Simulation.Core
             start = 0;
             step = 1;
         }
-
-        // Returns the default value of an object of this type of array. Normally null or 0, but for things like
-        // ValueTuples, it returns an empty instance of that value tuple.
-        private static T CreateDefault()
-        {
-            if (typeof(T).IsValueType || typeof(T).IsAbstract || typeof(T) == typeof(String) || typeof(T) == typeof(QVoid))
-            {
-                return default(T);
-            }
-            else
-            {
-                // First look for an empty constructor
-                ConstructorInfo defaultConstructor = typeof(T).GetConstructor(Type.EmptyTypes);
-                return defaultConstructor != null
-                    ? (T)(defaultConstructor.Invoke(new object[] { }))
-                    : Activator.CreateInstance<T>();
-            }
-        }
-
 
         /// <summary>
         /// Create an array of length 0.
@@ -508,7 +487,7 @@ namespace Microsoft.Quantum.Simulation.Core
                 currentIndex = -1;
             }
 
-            public T Current => currentIndex >= 0 ? array[currentIndex] : CreateDefault();
+            public T Current => currentIndex >= 0 ? array[currentIndex] : Default.OfType<T>();
 
             object IEnumerator.Current => this.Current;
 
