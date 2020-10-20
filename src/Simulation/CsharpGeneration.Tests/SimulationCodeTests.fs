@@ -3689,11 +3689,6 @@ namespace Microsoft.Quantum.Tests.UnitTests
                 {
                     sim.Execute<UnitTest1, QVoid, QVoid>(QVoid.Instance);
                 }
-                catch (Exception e)
-                {
-#line 22 "%%"
-                    Xunit.Assert.True(false, "Q# Test failed. For details see the Standard output below.");
-                }
                 finally
                 {
                     if (sim is IDisposable disposeSim)
@@ -3731,11 +3726,6 @@ namespace Microsoft.Quantum.Tests.UnitTests
                 try
                 {
                     sim.Execute<UnitTest1, QVoid, QVoid>(QVoid.Instance);
-                }
-                catch (Exception e)
-                {
-#line 22 "%%"
-                    Xunit.Assert.True(false, "Q# Test failed. For details see the Standard output below.");
                 }
                 finally
                 {
@@ -3803,11 +3793,6 @@ namespace Microsoft.Quantum.Tests.UnitTests
                 try
                 {
                     sim.Execute<UnitTest2, QVoid, QVoid>(QVoid.Instance);
-                }
-                catch (Exception e)
-                {
-#line 26 "%%"
-                    Xunit.Assert.True(false, "Q# Test failed. For details see the Standard output below.");
                 }
                 finally
                 {
