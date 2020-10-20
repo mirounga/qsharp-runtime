@@ -3685,10 +3685,16 @@ namespace Microsoft.Quantum.Tests.UnitTests
                     baseSim.OnLog += this.Output.WriteLine;
                 }
 
-                sim.Run<UnitTest1, QVoid, QVoid>(QVoid.Instance).Wait();
-                if (sim is IDisposable disposeSim)
+                try
                 {
-                    disposeSim.Dispose();
+                    sim.Execute<UnitTest1, QVoid, QVoid>(QVoid.Instance);
+                }
+                finally
+                {
+                    if (sim is IDisposable disposeSim)
+                    {
+                        disposeSim.Dispose();
+                    }
                 }
             }
         }
@@ -3717,10 +3723,16 @@ namespace Microsoft.Quantum.Tests.UnitTests
                     baseSim.OnLog += this.Output.WriteLine;
                 }
 
-                sim.Run<UnitTest1, QVoid, QVoid>(QVoid.Instance).Wait();
-                if (sim is IDisposable disposeSim)
+                try
                 {
-                    disposeSim.Dispose();
+                    sim.Execute<UnitTest1, QVoid, QVoid>(QVoid.Instance);
+                }
+                finally
+                {
+                    if (sim is IDisposable disposeSim)
+                    {
+                        disposeSim.Dispose();
+                    }
                 }
             }
         }
@@ -3778,10 +3790,16 @@ namespace Microsoft.Quantum.Tests.UnitTests
                     baseSim.OnLog += this.Output.WriteLine;
                 }
 
-                sim.Run<UnitTest2, QVoid, QVoid>(QVoid.Instance).Wait();
-                if (sim is IDisposable disposeSim)
+                try
                 {
-                    disposeSim.Dispose();
+                    sim.Execute<UnitTest2, QVoid, QVoid>(QVoid.Instance);
+                }
+                finally
+                {
+                    if (sim is IDisposable disposeSim)
+                    {
+                        disposeSim.Dispose();
+                    }
                 }
             }
         }
