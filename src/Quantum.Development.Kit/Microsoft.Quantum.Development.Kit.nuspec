@@ -24,7 +24,7 @@
     </packageTypes>
 
     <dependencies>
-      <dependency id="Microsoft.Quantum.Simulators" version="$version$" />
+      <dependency id="Microsoft.Quantum.Simulators" version="0.12.201016747-pull" />
     </dependencies>
   </metadata>
 
