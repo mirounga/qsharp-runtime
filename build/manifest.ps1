@@ -24,8 +24,12 @@ $artifacts = @{
         "Microsoft.Quantum.Development.Kit",
         "Microsoft.Quantum.EntryPointDriver",
         "Microsoft.Quantum.QSharp.Core",
+        "Microsoft.Quantum.Type1.Core",
+        "Microsoft.Quantum.Type2.Core",
         "Microsoft.Quantum.Runtime.Core",
         "Microsoft.Quantum.Simulators",
+        "Microsoft.Quantum.Simulators.Type1",
+        "Microsoft.Quantum.Simulators.Type2",
         "Microsoft.Quantum.Xunit"
     ) | ForEach-Object { Join-Path $Env:NUGET_OUTDIR "$_.$Env:NUGET_VERSION.nupkg" };
 
@@ -37,9 +41,14 @@ $artifacts = @{
         ".\src\Simulation\Core\bin\$Env:BUILD_CONFIGURATION\netstandard2.1\Microsoft.Quantum.Runtime.Core.dll",
         ".\src\Simulation\EntryPointDriver\bin\$Env:BUILD_CONFIGURATION\netstandard2.1\Microsoft.Quantum.EntryPointDriver.dll",
         ".\src\Simulation\QsharpCore\bin\$Env:BUILD_CONFIGURATION\netstandard2.1\Microsoft.Quantum.QSharp.Core.dll",
+        ".\src\Simulation\Type1Core\bin\$Env:BUILD_CONFIGURATION\netstandard2.1\Microsoft.Quantum.Type1.Core.dll",
+        ".\src\Simulation\Type2Core\bin\$Env:BUILD_CONFIGURATION\netstandard2.1\Microsoft.Quantum.Type2.Core.dll",
+        ".\src\Simulation\QsharpFoundation\bin\$Env:BUILD_CONFIGURATION\netstandard2.1\Microsoft.Quantum.QSharp.Foundation.dll",
         ".\src\Simulation\Simulators\bin\$Env:BUILD_CONFIGURATION\netstandard2.1\Microsoft.Quantum.Simulation.Common.dll",
         ".\src\Simulation\Simulators\bin\$Env:BUILD_CONFIGURATION\netstandard2.1\Microsoft.Quantum.Simulation.QCTraceSimulatorRuntime.dll",
         ".\src\Simulation\Simulators\bin\$Env:BUILD_CONFIGURATION\netstandard2.1\Microsoft.Quantum.Simulators.dll",
+        ".\src\Simulation\Simulators.Type1\bin\$Env:BUILD_CONFIGURATION\netstandard2.1\Microsoft.Quantum.Simulators.Type1.dll",
+        ".\src\Simulation\Simulators.Type2\bin\$Env:BUILD_CONFIGURATION\netstandard2.1\Microsoft.Quantum.Simulators.Type2.dll",
         ".\src\Xunit\bin\$Env:BUILD_CONFIGURATION\netstandard2.1\Microsoft.Quantum.Xunit.dll"
     ) | ForEach-Object { Join-Path $PSScriptRoot (Join-Path ".." $_) };
     
