@@ -488,8 +488,8 @@ namespace Microsoft.Quantum.Simulation.Common
                 return;
             }
 
-            for (long i = qubitsToRelease.Length-1; i>=0; i--)
-            { // Going from the end is more efficient in case we are tracking scope.
+            for (long i = 0; i < qubitsToRelease.Length; i++)
+            {
                 this.Release(qubitsToRelease[i], wasUsedOnlyForBorrowing: false);
             }
         }
