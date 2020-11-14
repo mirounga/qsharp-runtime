@@ -561,6 +561,7 @@ let ``Submit uses default values`` () =
                Storage:
                AAD Token:
                Base URI:
+               Location:
                Job Name:
                Shots: 500
                Output: FriendlyUri
@@ -580,6 +581,7 @@ let ``Submit uses default values with default target`` () =
                Storage:
                AAD Token:
                Base URI:
+               Location:
                Job Name:
                Shots: 500
                Output: FriendlyUri
@@ -599,6 +601,8 @@ let ``Submit allows overriding default values`` () =
         "myToken"
         "--base-uri"
         "myBaseUri"
+        "--location"
+        "myLocation"
         "--job-name"
         "myJobName"
         "--shots"
@@ -611,6 +615,7 @@ let ``Submit allows overriding default values`` () =
                Storage: myStorage
                AAD Token: myToken
                Base URI: myBaseUri
+               Location: myLocation
                Job Name: myJobName
                Shots: 750
                Output: FriendlyUri
@@ -630,6 +635,8 @@ let ``Submit allows overriding default values with default target`` () =
         "myToken"
         "--base-uri"
         "myBaseUri"
+        "--location"
+        "myLocation"
         "--job-name"
         "myJobName"
         "--shots"
@@ -642,6 +649,7 @@ let ``Submit allows overriding default values with default target`` () =
                Storage: myStorage
                AAD Token: myToken
                Base URI: myBaseUri
+               Location: myLocation
                Job Name: myJobName
                Shots: 750
                Output: FriendlyUri
@@ -745,6 +753,7 @@ let ``Shows help text for submit command`` () =
                       --storage <storage>                                 The storage account connection string.
                       --aad-token <aad-token>                             The Azure Active Directory authentication token.
                       --base-uri <base-uri>                               The base URI of the Azure Quantum endpoint.
+                      --location <location>                               The location to use with the default endpoint.
                       --job-name <job-name>                               The name of the submitted job.
                       --shots <shots>                                     The number of times the program is executed on the target machine.
                       --output <FriendlyUri|Id>                           The information to show in the output after the job is submitted.
@@ -773,6 +782,7 @@ let ``Shows help text for submit command with default target`` () =
                       --storage <storage>                                 The storage account connection string.
                       --aad-token <aad-token>                             The Azure Active Directory authentication token.
                       --base-uri <base-uri>                               The base URI of the Azure Quantum endpoint.
+                      --location <location>                               The location to use with the default endpoint.
                       --job-name <job-name>                               The name of the submitted job.
                       --shots <shots>                                     The number of times the program is executed on the target machine.
                       --output <FriendlyUri|Id>                           The information to show in the output after the job is submitted.
