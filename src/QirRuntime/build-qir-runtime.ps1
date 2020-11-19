@@ -3,16 +3,20 @@
 
 Write-Host "##[info]Build QIR Runtime"
 $oldCC = $env:CC
-$oldCXX = $env:CC
-if (-not (Test-Path Env:AGENT_OS) -or ($Env:AGENT_OS.StartsWith("Win"))) {
+$oldCXX = $env:CXX
+
+if (($IsWindows) -or ((Test-Path Env:AGENT_OS) -and ($Env:AGENT_OS.StartsWith("Win")))) {
+    Write-Host "On Windows build QIR Runtime using Clang"
     $env:CC = "C:\Program Files\LLVM\bin\clang.exe"
     $env:CXX = "C:\Program Files\LLVM\bin\clang++.exe"
     $llvmExtras = (Join-Path $PSScriptRoot "externals/LLVM")
     $env:PATH += ";$llvmExtras"
 } else {
+    Write-Host "On non-Windows platforms build QIR Runtime using Clang"
     $env:CC = "/usr/bin/clang"
     $env:CXX = "/usr/bin/clang++"
 }
+
 
 $qirRuntimeBuildFolder = (Join-Path $PSScriptRoot "build\$Env:BUILD_CONFIGURATION")
 if (-not (Test-Path $qirRuntimeBuildFolder)) {
@@ -24,9 +28,10 @@ Push-Location $qirRuntimeBuildFolder
 cmake -G Ninja -DCMAKE_BUILD_TYPE= $Env:BUILD_CONFIGURATION ../..
 cmake --build . --target install
 
+Pop-Location
+
 $env:CC = $oldCC
 $env:CXX = $oldCXX
-Pop-Location
 
 if ($LastExitCode -ne 0) {
     Write-Host "##vso[task.logissue type=error;]Failed to build QIR Runtime."
