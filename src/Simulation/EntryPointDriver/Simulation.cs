@@ -29,9 +29,18 @@ namespace Microsoft.Quantum.EntryPointDriver
         internal static async Task<int> Simulate(
             DriverSettings settings, IEntryPoint<TIn, TOut> entryPoint, ParseResult parseResult, string simulator)
         {
+            if (String.IsNullOrEmpty(entryPoint.TargetIntrinsicsType.Assembly.ToString()))
+            {
+                // The target intrinsics assembly hasn't been loaded, so we won't be able to execute
+                // any intrinsic callables from the target gate set.
+                // We don't actually expect this to ever happen, as the act of getting the assembly name
+                // should force the type to become fully loaded. The assembly needs to load before the 
+                // chosen simulator is initialized for the reflection logic to work.
+                throw new TypeAccessException("Unable to locate target intrinsic types.");
+            }
             if (simulator == settings.ResourcesEstimatorName)
             {
-                var resourcesEstimator = new ResourcesEstimator();
+                var resourcesEstimator = new ResourcesEstimator(entryPoint.TargetIntrinsicsType);
                 await resourcesEstimator.Run<TCallable, TIn, TOut>(entryPoint.CreateArgument(parseResult));
                 Console.WriteLine(resourcesEstimator.ToTSV());
             }
@@ -39,9 +48,9 @@ namespace Microsoft.Quantum.EntryPointDriver
             {
                 var (isCustom, createSimulator) =
                     simulator == settings.QuantumSimulatorName
-                        ? (false, () => new QuantumSimulator())
+                        ? (false, () => new QuantumSimulator(entryPoint.TargetIntrinsicsType))
                         : simulator == settings.ToffoliSimulatorName
-                        ? (false, new Func<IOperationFactory>(() => new ToffoliSimulator()))
+                        ? (false, new Func<IOperationFactory>(() => new ToffoliSimulator(entryPoint.TargetIntrinsicsType)))
                         : (true, entryPoint.CreateDefaultCustomSimulator);
                 if (isCustom && simulator != entryPoint.DefaultSimulatorName)
                 {

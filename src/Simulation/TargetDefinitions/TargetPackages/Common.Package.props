@@ -27,7 +27,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\QsharpFoundation\Microsoft.Quantum.QSharp.Foundation.csproj" />
+    <ProjectReference Include="..\TargetDefinitions\Interfaces\Microsoft.Quantum.Targets.Interfaces.csproj" />
+    <ProjectReference Include="..\QsharpFoundation\Microsoft.Quantum.Qsharp.Foundation.csproj" />
     <ProjectReference Include="..\CsharpGeneration\Microsoft.Quantum.CsharpGeneration.fsproj" PrivateAssets="All" IsQscReference="true" />
   </ItemGroup>
 
