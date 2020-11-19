@@ -19,7 +19,8 @@ if (-not (Test-Path $nativeBuild)) {
 }
 Push-Location $nativeBuild
 
-cmake $compiler -DBUILD_SHARED_LIBS:BOOL="1" -DCMAKE_BUILD_TYPE= $BuildConfiguration ../..
+# We never build debug build of native simulator? (-DCMAKE_BUILD_TYPE= $BuildConfiguration)
+cmake $compiler -DBUILD_SHARED_LIBS:BOOL="1" -DCMAKE_BUILD_TYPE= Release ../..
 cmake --build .
 
 Pop-Location
