@@ -4,14 +4,10 @@
 Write-Host "##[info]Build Native simulator"
 
 $compiler = ""
-if (Test-Path Env:AGENT_OS) {
-    if ($Env:AGENT_OS.StartsWith("Darwin")) {
-        $compiler = "-DCMAKE_C_COMPILER=gcc-7 -DCMAKE_CXX_COMPILER=g++-7"
-        Write-Host "The system is identified as MacOS: $IsMacOS"
-    }
-} else {
-    Write-Host "Native Simulator should be built on MacOS using gcc7."
+if (($IsMacOS) -or ((Test-Path Env:AGENT_OS) -and ($Env:AGENT_OS.StartsWith("Darwin")))) {
+        $compiler = "-DCMAKE_C_COMPILER= gcc-7 -DCMAKE_CXX_COMPILER= g++-7"
 }
+# On other platforms use the default availalbe compiler
 
 $nativeBuild = (Join-Path $PSScriptRoot "build\$Env:BUILD_CONFIGURATION")
 if (-not (Test-Path $nativeBuild)) {
@@ -19,7 +15,8 @@ if (-not (Test-Path $nativeBuild)) {
 }
 Push-Location $nativeBuild
 
-cmake $compiler -DBUILD_SHARED_LIBS:BOOL="1" -DCMAKE_BUILD_TYPE= $BuildConfiguration ../..
+# We never build debug build of native simulator? (-DCMAKE_BUILD_TYPE= $BuildConfiguration)
+cmake $compiler -DBUILD_SHARED_LIBS:BOOL="1" -DCMAKE_BUILD_TYPE= Release ../..
 cmake --build .
 
 Pop-Location
