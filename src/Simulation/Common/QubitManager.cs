@@ -43,6 +43,7 @@ namespace Microsoft.Quantum.Simulation.Common
         private long AllocatedForBorrowing; // All qubits allocated only for borrowing, will be marked with this number or higher.
         private long free; // Points to the first free (unallocated) qubit.
         private long freeTail; // Points to the last free (unallocated) qubit. Only valid iff (!EncourageReuse).
+        private static HashSet<Qubit> EMPTY_SET = new HashSet<Qubit>();
 
         // Options
         protected readonly bool MayExtendCapacity;
@@ -81,20 +82,20 @@ namespace Microsoft.Quantum.Simulation.Common
         {
             internal IApplyData? Data;
             internal IEnumerable<Qubit>? QubitsInArgument => Data?.Qubits;
-            private List<Qubit>? _locals; // Qubits allocated/borrowed in the current operation
+            private Dictionary<Qubit, int>? _locals; // Qubits allocated/borrowed in the current operation
 
             public StackFrame(IApplyData data = null)
             {
                 Data = data;
             }
 
-            public List<Qubit> Locals
+            public Dictionary<Qubit, int> Locals
             {
                 get
                 {
                     if (_locals == null)
                     {
-                        _locals = new List<Qubit>();
+                        _locals = new Dictionary<Qubit, int>();
                     }
 
                     return _locals;
@@ -120,23 +121,37 @@ namespace Microsoft.Quantum.Simulation.Common
             }
         }
 
-        protected IEnumerable<Qubit> QubitsInUse(StackFrame frame)
+        protected HashSet<Qubit> QubitsInUse(StackFrame frame)
         {
             if (DisableBorrowing || frame == null)
             {
-                return Qubit.NO_QUBITS;
+                return EMPTY_SET;
             }
 
-            return frame.Locals.Concat(frame.QubitsInArgument ?? Array.Empty<Qubit>())
-                .Where(q => q != null && !this.IsDisabled(q));
+            HashSet<Qubit> inUse = new HashSet<Qubit>();
+            foreach (Qubit q in frame.Locals.Keys)
+            {
+                if (q != null && !this.IsDisabled(q))
+                {
+                    inUse.Add(q);
+                }
+            }
+            if (frame.QubitsInArgument != null)
+            {
+                foreach (Qubit q in frame.QubitsInArgument)
+                {
+                    if (q != null && !this.IsDisabled(q))
+                    {
+                        inUse.Add(q);
+                    };
+                }
+            }
+            return inUse;
         }
 
         protected int QubitsInUseCount(StackFrame frame)
         {
-            // The following is not really efficient, but let's wait to see if distinct can be part of the contract
-            // for the qubitsInArgument parameter of StartOperation call.
-            // Well, we are talking about really small arrays here anyway.
-            return QubitsInUse(frame).Distinct().Count();
+            return QubitsInUse(frame).Count();
         }
 
         #endregion
@@ -367,7 +382,10 @@ namespace Microsoft.Quantum.Simulation.Common
             NumAllocatedQubits++;
             if (!DisableBorrowing)
             {
-                operationStack.Peek().Locals.Add(ret);
+                if (!operationStack.Peek().Locals.TryAdd(ret, 1))
+                {
+                    operationStack.Peek().Locals[ret]++;
+                }
             }
             return ret;
         }
@@ -401,7 +419,12 @@ namespace Microsoft.Quantum.Simulation.Common
                 return QArray<Qubit>.Create(0);
             }
 
-            QArray<Qubit> result = QArray<Qubit>.Create(numToAllocate); 
+            QArray<Qubit> result = QArray<Qubit>.Create(numToAllocate);
+            if (!DisableBorrowing)
+            {
+                var locals = operationStack.Peek().Locals;
+                locals.EnsureCapacity(locals.Count + (int)numToAllocate);
+            }
             for (int i = 0; i < numToAllocate; i++)
             {
                 Qubit? allocated = Allocate(usedOnlyForBorrowing: false);
@@ -465,8 +488,13 @@ namespace Microsoft.Quantum.Simulation.Common
 
             if (!DisableBorrowing)
             {
-                bool success = operationStack.Peek().Locals.Remove(qubit);
-                Debug.Assert(success, "Releasing qubit that is not a local variable in scope.");
+                var locals = operationStack.Peek().Locals;
+                Debug.Assert(locals.ContainsKey(qubit) && locals[qubit] > 0, "Releasing qubit that is not a local variable in scope.");
+                locals[qubit]--;
+                if (locals[qubit] == 0)
+                {
+                    locals.Remove(qubit);
+                }
             }
         }
 
@@ -488,8 +516,6 @@ namespace Microsoft.Quantum.Simulation.Common
                 return;
             }
 
-            // When tracking scopes for borrowing, it's more efficient to release qubits in the same order
-            // they were allocated in (which in case of allocated arrays is from left to right).
             foreach (var qubit in qubitsToRelease)
             {
                 this.Release(qubit, wasUsedOnlyForBorrowing: false);
@@ -532,7 +558,10 @@ namespace Microsoft.Quantum.Simulation.Common
                 Qubit ret = CreateQubitObject(curQubit);
                 if (!DisableBorrowing)
                 {
-                    operationStack.Peek().Locals.Add(ret);
+                    if (!operationStack.Peek().Locals.TryAdd(ret, 1))
+                    {
+                        operationStack.Peek().Locals[ret]++;
+                    }
                 }
                 return ret;
             }
@@ -540,9 +569,9 @@ namespace Microsoft.Quantum.Simulation.Common
         }
 
         // internal for testing purposes
-        internal IQArray<Qubit> Borrow(long numToBorrow, IEnumerable<Qubit> qubitsInUse)
+        internal IQArray<Qubit> Borrow(long numToBorrow, HashSet<Qubit> qubitsInUse)
         {
-            var inUse = new Stack<Qubit>(qubitsInUse.Distinct().OrderByDescending(q => q.Id));
+            var inUse = new Stack<Qubit>(qubitsInUse.OrderByDescending(q => q.Id));
             var borrowed = QArray<Qubit>.Create(numToBorrow);
             long numBorrowed = System.Math.Min(NumAllocatedQubits - inUse.Count, numToBorrow);
 
@@ -609,7 +638,7 @@ namespace Microsoft.Quantum.Simulation.Common
                 return Allocate();
             }
 
-            var inUse = new Stack<Qubit>(QubitsInUse(operationStack.Peek()).Distinct().OrderByDescending(q => q.Id));
+            var inUse = new Stack<Qubit>(QubitsInUse(operationStack.Peek()).OrderByDescending(q => q.Id));
             return NumAllocatedQubits == inUse.Count ? Allocate() : (Borrow(inUse) ?? Allocate());
         }
 
@@ -648,8 +677,13 @@ namespace Microsoft.Quantum.Simulation.Common
                 }
                 else
                 {
-                    bool success = operationStack.Peek().Locals.Remove(qubit); // Could be more efficient here going from the end manually.
-                    Debug.Assert(success, "Returning qubit that is not a local variable in scope.");
+                    var locals = operationStack.Peek().Locals;
+                    Debug.Assert(locals.ContainsKey(qubit) && locals[qubit] > 0, "Releasing qubit that is not a local variable in scope.");
+                    locals[qubit]--;
+                    if (locals[qubit] == 0)
+                    {
+                        locals.Remove(qubit);
+                    }
                 }
             }
         }
@@ -665,8 +699,6 @@ namespace Microsoft.Quantum.Simulation.Common
                 return;
             }
 
-            // When tracking scopes for borrowing, it's more efficient to release qubits in the same order
-            // they were allocated in (which in case of borrowed arrays is from left to right if we had to allocate).
             foreach (var qubit in qubitsToReturn)
             {
                 this.Return(qubit);
