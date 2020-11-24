@@ -3,30 +3,24 @@
 
 $ErrorActionPreference = 'Stop'
 
-Push-Location (Join-Path $PSScriptRoot "src/Simulation/CsharpGeneration")
-    .\FindNuspecReferences.ps1
-Pop-Location
-
-Push-Location (Join-Path $PSScriptRoot "src/Simulation/Simulators")
-    .\FindNuspecReferences.ps1
-Pop-Location
-
-if ($Env:ENABLE_QIRRUNTIME -eq "true") {
-    Push-Location (Join-Path $PSScriptRoot "src/QirRuntime")
-        .\install-prereqs.ps1
-    Pop-Location
-} else {
-    Write-Host "Skipping installing prerequisites for qir runtime because ENABLE_QIRRUNTIME variable set to: $Env:ENABLE_QIRRUNTIME."
+If ($Env:NATIVE_SIMULATOR_BUILD_CONFIGURATION -eq $null) {
+    $Env:NATIVE_SIMULATOR_BUILD_CONFIGURATION = "Release"
 }
 
-# bootstrap native folder
-if ($Env:ENABLE_NATIVE -ne "false") {
-    ## Run the right script based on the OS.
-    if (-not (Test-Path Env:AGENT_OS) -or ($Env:AGENT_OS.StartsWith("Win"))) {
-        .\bootstrap.cmd
-    } else {
-        .\bootstrap.sh
+Push-Location (Join-Path $PSScriptRoot "build")
+    .\prerequisites.ps1
+Pop-Location
+
+# When setting up local dev environment, build Release version of the native simulator and Debug version of the managed
+# part of the runtime.
+if (-not (Test-Path Env:AGENT_OS)) {
+    if ($Env:ENABLE_NATIVE -ne "false") {
+        Write-Host "Build release flavor of the native simulator"
+        Push-Location (Join-Path $PSScriptRoot "src/Simulation/Native")
+            .\build-native-simulator.ps1
+        Pop-Location
     }
-} else {
-    Write-Host "Skipping native. ENABLE_NATIVE variable set to: $Env:ENABLE_NATIVE."
+
+    Write-Host "Build simulation solution"
+    dotnet build Simulation.sln
 }
