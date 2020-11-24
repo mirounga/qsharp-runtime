@@ -5,34 +5,36 @@
 
   <ItemGroup>
     <QsharpCompile Include="..\TargetDefinitions\Intrinsic\H.qs" />
-    <QsharpCompile Include="..\TargetDefinitions\Intrinsic\I.qs" />
+    <Compile Include="..\TargetDefinitions\Intrinsic\H.cs" />
     <QsharpCompile Include="..\TargetDefinitions\Intrinsic\IsingXX.qs" />
+    <Compile Include="..\TargetDefinitions\Intrinsic\IsingXX.cs" />
     <QsharpCompile Include="..\TargetDefinitions\Intrinsic\IsingYY.qs" />
+    <Compile Include="..\TargetDefinitions\Intrinsic\IsingYY.cs" />
     <QsharpCompile Include="..\TargetDefinitions\Intrinsic\IsingZZ.qs" />
+    <Compile Include="..\TargetDefinitions\Intrinsic\IsingZZ.cs" />
     <QsharpCompile Include="..\TargetDefinitions\Intrinsic\M.qs" />
+    <Compile Include="..\TargetDefinitions\Intrinsic\M.cs" />
     <QsharpCompile Include="..\TargetDefinitions\Intrinsic\Rx.qs" />
+    <Compile Include="..\TargetDefinitions\Intrinsic\Rx.cs" />
     <QsharpCompile Include="..\TargetDefinitions\Intrinsic\Ry.qs" />
+    <Compile Include="..\TargetDefinitions\Intrinsic\Ry.cs" />
     <QsharpCompile Include="..\TargetDefinitions\Intrinsic\Rz.qs" />
+    <Compile Include="..\TargetDefinitions\Intrinsic\Rz.cs" />
     <QsharpCompile Include="..\TargetDefinitions\Intrinsic\S.qs" />
+    <Compile Include="..\TargetDefinitions\Intrinsic\S.cs" />
     <QsharpCompile Include="..\TargetDefinitions\Intrinsic\SWAP.qs" />
+    <Compile Include="..\TargetDefinitions\Intrinsic\SWAP.cs" />
     <QsharpCompile Include="..\TargetDefinitions\Intrinsic\T.qs" />
+    <Compile Include="..\TargetDefinitions\Intrinsic\T.cs" />
     <QsharpCompile Include="..\TargetDefinitions\Intrinsic\X.qs" />
+    <Compile Include="..\TargetDefinitions\Intrinsic\X.cs" />
     <QsharpCompile Include="..\TargetDefinitions\Intrinsic\Y.qs" />
+    <Compile Include="..\TargetDefinitions\Intrinsic\Y.cs" />
     <QsharpCompile Include="..\TargetDefinitions\Intrinsic\Z.qs" />
+    <Compile Include="..\TargetDefinitions\Intrinsic\Z.cs" />
   </ItemGroup>
 
   <ItemGroup>
-    <QsharpCompile Include="..\TargetDefinitions\Decompositions\ApplyControlledX.qs" />
-    <QsharpCompile Include="..\TargetDefinitions\Decompositions\ApplyControlledZ.qs" />
-    <QsharpCompile Include="..\TargetDefinitions\Decompositions\ApplyUncontrolledH.qs" />
-    <QsharpCompile Include="..\TargetDefinitions\Decompositions\ApplyUncontrolledRx.qs" />
-    <QsharpCompile Include="..\TargetDefinitions\Decompositions\ApplyUncontrolledRy.qs" />
-    <QsharpCompile Include="..\TargetDefinitions\Decompositions\ApplyUncontrolledRz.qs" />
-    <QsharpCompile Include="..\TargetDefinitions\Decompositions\ApplyUncontrolledS.qs" />
-    <QsharpCompile Include="..\TargetDefinitions\Decompositions\ApplyUncontrolledT.qs" />
-    <QsharpCompile Include="..\TargetDefinitions\Decompositions\ApplyUncontrolledX.qs" />
-    <QsharpCompile Include="..\TargetDefinitions\Decompositions\ApplyUncontrolledY.qs" />
-    <QsharpCompile Include="..\TargetDefinitions\Decompositions\ApplyUncontrolledZ.qs" />
     <QsharpCompile Include="..\TargetDefinitions\Decompositions\AssertOperationsEqualInPlace.qs" />
     <QsharpCompile Include="..\TargetDefinitions\Decompositions\AssertOperationsEqualReferenced.qs" />
     <QsharpCompile Include="..\TargetDefinitions\Decompositions\CCNOT.qs" />
@@ -40,6 +42,7 @@
     <QsharpCompile Include="..\TargetDefinitions\Decompositions\ExpFracFromExpUtil.qs" />
     <QsharpCompile Include="..\TargetDefinitions\Decompositions\ExpFromExpUtil.qs" />
     <QsharpCompile Include="..\TargetDefinitions\Decompositions\ExpUtilFromIsing.qs" />
+    <QsharpCompile Include="..\TargetDefinitions\Decompositions\I.qs" />
     <QsharpCompile Include="..\TargetDefinitions\Decompositions\MeasureWithNoReuse.qs" />
     <QsharpCompile Include="..\TargetDefinitions\Decompositions\MResetXWithNoReuse.qs" />
     <QsharpCompile Include="..\TargetDefinitions\Decompositions\MResetYWithNoReuse.qs" />
